@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 
 class CombatStyle {
   final String name;
@@ -19,7 +19,7 @@ class CombatStyle {
   factory CombatStyle.fromJson(Map<String, dynamic> json) {
     return CombatStyle(
       name: json['name'],
-      img: json['img'] ?? '', // Handle missing image URL
+      img: json['img'],
       description: json['description'] ?? 'No description available',
       characters: json['combat_style_character'] ?? [],
     );
@@ -27,25 +27,21 @@ class CombatStyle {
 }
 
 Future<List<CombatStyle>> fetchDemonSlayer() async {
-  try {
-    final response = await http.get(Uri.parse(
-        'https://cors.bridged.cc/https://www.demonslayer-api.com/api/v1/combat-styles'));
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body)['content'];
-      return data.map((json) => CombatStyle.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load data: ${response.statusCode}');
-    }
-  } catch (e) {
-    throw Exception('Failed to load data: $e');
+  final response = await http.get(Uri.parse(
+      'https://cors.bridged.cc/https://www.demonslayer-api.com/api/v1/combat-styles'));
+  if (response.statusCode == 200) {
+    List<dynamic> data = json.decode(response.body)['content'];
+    return data.map((json) => CombatStyle.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load data');
   }
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -61,18 +57,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Demon Slayer Combat Styles"),
+        title: const Text("Unit 7 - API Calls"),
       ),
       body: FutureBuilder<List<CombatStyle>>(
         future: futureCombatStyles,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No data available'));
-          } else {
+          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
@@ -89,38 +83,36 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 50,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.broken_image, size: 50);
-                          },
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.error),
                         )
-                      : Icon(Icons.image_not_supported, size: 50),
+                      : Icon(Icons.image_not_supported),
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(style.description),
                       const SizedBox(height: 10),
-                      if (style.characters.isNotEmpty)
-                        ...style.characters.map((character) {
-                          String characterName =
-                              character['name'] ?? 'No name available';
-                          String characterDescription =
-                              character['description'] ??
-                                  'No description available';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: ListTile(
-                              title: Text(characterName),
-                              subtitle: Text(characterDescription),
-                            ),
-                          );
-                        }).toList(),
+                      ...style.characters.map((character) {
+                        String characterName =
+                            character['name'] ?? 'No name available';
+                        String characterDescription =
+                            character['description'] ??
+                                'No description available';
+                        return ListTile(
+                          title: Text(characterName),
+                          subtitle: Text(characterDescription),
+                        );
+                      }).toList(),
                     ],
                   ),
                 );
               },
             );
+          } else {
+            return const Center(child: Text('No data available'));
           }
         },
       ),
