@@ -3,7 +3,7 @@ import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// Model for CombatStyle
+
 class CombatStyle {
   final String name;
   final String img;
@@ -27,7 +27,7 @@ class CombatStyle {
   }
 }
 
-// Fetch data from the API
+
 Future<List<CombatStyle>> fetchDemonSlayer() async {
   try {
     final response = await http.get(
@@ -45,7 +45,7 @@ Future<List<CombatStyle>> fetchDemonSlayer() async {
   }
 }
 
-// HomeScreen Widget
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
