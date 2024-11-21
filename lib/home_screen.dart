@@ -3,6 +3,7 @@ import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// Model for CombatStyle
 class CombatStyle {
   final String name;
   final String img;
@@ -18,25 +19,33 @@ class CombatStyle {
 
   factory CombatStyle.fromJson(Map<String, dynamic> json) {
     return CombatStyle(
-      name: json['name'],
-      img: json['img'],
+      name: json['name'] ?? 'No name available',
+      img: json['img'] ?? '',
       description: json['description'] ?? 'No description available',
       characters: json['combat_style_character'] ?? [],
     );
   }
 }
 
+// Fetch data from the API
 Future<List<CombatStyle>> fetchDemonSlayer() async {
-  final response = await http.get(Uri.parse(
-      'https://cors.bridged.cc/https://www.demonslayer-api.com/api/v1/combat-styles'));
-  if (response.statusCode == 200) {
-    List<dynamic> data = json.decode(response.body)['content'];
-    return data.map((json) => CombatStyle.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load data');
+  try {
+    final response = await http.get(
+      Uri.parse(
+          'https://cors.bridged.cc/https://www.demonslayer-api.com/api/v1/combat-styles'),
+    );
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body)['content'];
+      return data.map((json) => CombatStyle.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load data: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Failed to fetch data: $e');
   }
 }
 
+// HomeScreen Widget
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -65,7 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
           } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             return ListView.builder(
               itemCount: snapshot.data!.length,
@@ -87,9 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: CircularProgressIndicator());
                           },
                           errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.error),
+                              const Icon(Icons.error),
                         )
-                      : Icon(Icons.image_not_supported),
+                      : const Icon(Icons.image_not_supported),
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -112,7 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             );
           } else {
-            return const Center(child: Text('No data available'));
+            return const Center(
+              child: Text('No data available'),
+            );
           }
         },
       ),
